@@ -1,0 +1,21 @@
+{% load static %}
+
+
+<!doctype html>
+<html lang="en" class="h-100">
+<head>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}">
+  <meta charset="utf-8">
+        <title>Магазин очков</title>
+</head>
+<body>
+    <div class="rectangleHeader">
+        <a class = "homebtn" href = "{% url 'main_url'%}">
+            <img class = "HeaderPic" src = 'http://localhost:9000/glassesimgs/HeaderPic.jpg'>
+        </a>
+    </div>
+    {% block content %}
+    {% endblock %}
+
+</body>
+</html>
