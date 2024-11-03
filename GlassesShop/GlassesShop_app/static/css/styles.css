@@ -386,3 +386,41 @@ position:absolute;
 left: 50%;
 top:180px
 }
+
+.AddLensBtn{
+    background-color:#ffffff;
+    height:27px;
+    width:159px;
+    border-radius:10px;
+    border:2px solid #af214c;
+    text-align:center;
+    vertical-align:text-top;
+    font-size:18px;
+    font-family:Manrope;
+    line-height:auto;
+    outline:none;
+    position:absolute;
+    bottom: 45px;
+    left: 70px;
+    
+    
+}
+
+.delGlassesOrderBtn{
+    background-color:#e95181;
+    height:35px;
+    left:25px;
+    top: 10px;
+    width:180px;
+    border-radius:10px;
+    color: #ffffff;
+    border:2px solid #e95181;
+    text-align:center;
+    vertical-align:text-top;
+    font-size:22px;
+    font-family:Manrope;
+    line-height:auto;
+    outline:none;
+    position:relative;
+    margin-bottom: 35px;
+}

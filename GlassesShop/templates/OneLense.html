@@ -2,7 +2,7 @@
 
 {% block content %}
     <div class = "single_lens_name">{{data.Lens.name}}</div>
-    <img class = "single_lens_image" src = "{{data.Lens.image}}">
-    <div class = "single_lens_description">{{data.Lens.dscr}}</div>
-    <div class = "single_lens_price">{{data.Lens.price}}</div>
+    <img class = "single_lens_image" src = "{{data.Lens.url}}">
+    <div class = "single_lens_description">{{data.Lens.description}}</div>
+    <div class = "single_lens_price">Цена: {{data.Lens.price}} рублей</div>
 {% endblock %}

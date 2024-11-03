@@ -1,105 +1,130 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from datetime import date
+from django.http import HttpResponse
+import psycopg2
+from .models import  GlassesOrder, MToM, Lens, AuthUser
+
+conn = psycopg2.connect(dbname="glasses_shop", host="localhost", user="postgres", password="1111", port="5432")
+
+cursor = conn.cursor()
+
+current_user_id = 1
 
 
-Glasses_Orders_list = [
-    {
-        'id': 1,
-        'ItemIds':[1, 2, 3]
-    },
-    {
-        'id': 2,
-        'ItemIds':[]
-    },
-    {
-        'id': 3,
-        'ItemIds':[3, 4, 5, 1]
-    }
-]
+def getLensById(lensId):
+    return Lens.objects.get(lens_id=lensId)
 
-Lenses_list = [
-    {'image': 'http://localhost:9000/glassesimgs/img1.jpeg',
-    'name': 'Однофокальные линзы',
-    'dscr': 'Однофокальные (или монофокальные) линзы имеют одну оптическую зону и поэтому подходят для коррекции только одного фокусного расстояния – дальнего или близкого. Они имеют одинаковую оптическую силу по всей поверхности и считаются стандартными.',
-    'price': '2 000 рублей',
-    'id': 1
-    },
-    {'image': 'http://localhost:9000/glassesimgs/img2.jpeg',
-    'name': 'Прогрессивные линзы',
-    'dscr': 'Особенность таких линз − определенная оптическая сила на разных участках. Посмотрев через верхнюю часть, можно с легкостью разглядеть предметы на значительном расстоянии. Нижняя половина предназначена для рассмотрения объектов, расположенных вблизи. К примеру, если нужно прочитать газету или поработать с мелкими деталями, смотрят через нижнюю область. Для того, чтобы хорошо видеть птицу на далеко стоящем дереве, используют только верхнюю зону.',
-    'price': '1 000 рублей',
-    'id': 2
-    },
-    {'image': 'http://localhost:9000/glassesimgs/img3.jpeg',
-    'name': 'Офисные линзы',
-    'dscr': 'Офисные линзы – это упрощённая разновидность прогрессивных линз– идеальное решение для тех, кому необходимо четкое зрение на близких и средних расстояниях в одних очках одновременно. Т. е. в первую очередь для людей которым приходится использовать две пары очков: одни для чтения, а вторые для компьютера.',
-    'price': '1 500 рублей',
-    'id': 3
-    },
-    {'image':  'http://localhost:9000/glassesimgs/img4.jpeg',  
-    'name': 'Линзы с защитой от компьютера',
-    'dscr': 'Специальная линза, которую называют «С защитой от синего света», «Компьютерной» или BlueBlocker, не пропускает этот вредный свет за счет специального отражающего покрытия. Очки для компьютера с такими линзами блокируют воздействие вредной части спектра на сетчатку.',
-    'price': '2 000 рублей',
-    'id': 4
-    },
-    {'image': 'http://localhost:9000/glassesimgs/img5.jpeg', 
-    'name': 'Спортивные линзы',
-    'dscr': 'В первую очередь задачей спортивных очков является защита глаз спортсмена (от излишнего света, ветра, пыли, грязи и т.д.). При этом конструкция очков и материалы, из которых они изготовлены должны быть таковы, чтобы ни при каких обстоятельствах они не могли травмировать лицо и, главное, глаза спортсмена. Однако нередко  встаёт ещё одна задача: в случае слабого зрения спортсмена необходима его коррекция. При этом возникает ряд сложностей, как конструктивного (надёжно, безопасно разместить все элементы в достаточно малом объёма очков), так и оптического свойства (особенности конструкции спортивных очков резко сужают возможности использования обычных очковых линз).',
-    'price': '6 000 рублей',
-    'id': 5
-    },
-    {'image': 'http://localhost:9000/glassesimgs/img6.jpeg', 
-    'name': 'Фотохромные линзы',
-    'dscr': 'Фотохромные линзы, или линзы-хамелеоны, обладают переменным светопропусканием. Это означает, что они меняют прозрачность в зависимости от освещенности. При попадании на них ультрафиолета линзы становятся темными, но стоит зайти в помещение — и они снова бесцветные, как у обычных очков для зрения.',
-    'price': '10 000 рублей',
-    'id': 6
-    }
-]
+def getDraftByOrderIdandUserId(GlassesOrderId, UserId):
+    return GlassesOrder.objects.filter(glasses_order_id = GlassesOrderId, creator=UserId, status='draft').first()
 
-def GlassesOrderController(request, id):
+def getMtoMByGlassesOrder(GlassesOrderId):
+    return MToM.objects.filter(glasses_order_id=GlassesOrderId).all()
 
-    linses_in_order_list = []
-
-    for GlassesOrder in Glasses_Orders_list:
-        if GlassesOrder['id'] == id:
-            for i in GlassesOrder['ItemIds']:
-                for Lens in Lenses_list:
-                    if Lens['id'] == i:
-                        linses_in_order_list.append(Lens)
-
-    return render(request, 'GlassesOrder.html', {'data' : {
-        'id': id,
-        'lenses': linses_in_order_list
-    }})
+def getOrderByUserId(UserId):
+    return GlassesOrder.objects.filter(creator=UserId, status='draft').first() 
 
 def LensesController(request):
 
-    GlassesOrder_id = 3
+    LensInOrderCount = 0
+    CurrentGlassesOrderId = -1
 
-    GlassesOrderCount = 0
-    for Order in Glasses_Orders_list:
-        if Order['id'] == GlassesOrder_id:
-            GlassesOrderCount =  len(Order['ItemIds'])
+    CurGlassesOrder = getOrderByUserId(current_user_id)
+
+    if CurGlassesOrder!= None:
+        Lenses_in_current_glasses_order = getMtoMByGlassesOrder(CurGlassesOrder.glasses_order_id)
+        LensInOrderCount = len(Lenses_in_current_glasses_order)
+        CurrentGlassesOrderId = CurGlassesOrder.glasses_order_id
 
     search = ''
     if 'search_lens' in request.GET:
         search = request.GET['search_lens']
 
-    lenses_list_main = []
-
-    for order in Lenses_list:
-        if search.lower() in order['name'].lower():
-            lenses_list_main.append(order)
+    lenses_found_by_search = Lens.objects.filter(name__icontains=search)
 
     return render(request, 'Lenses.html', {'data' : {
-        'Lenses': lenses_list_main,
-        'GlassesOrderCount' : GlassesOrderCount,
-        'GlassesOrder_id' : GlassesOrder_id
+        'Lenses': lenses_found_by_search,
+        'GlassesOrderCount' : LensInOrderCount,
+        'GlassesOrder_id' : CurrentGlassesOrderId
+        
     }})
 
+
 def LensDescriptionController(request, id):
+
+    lens = getLensById(id)    
+
+    if lens == None:
+        return redirect(LensesController)
+
     return render(request, 'OneLense.html', {'data' : {
-        'Lens' : Lenses_list[id-1],
+        'Lens' : lens,
         'id': id
     }})
+
+def GlassesOrderController(request, id):
+    CurGlassesOrder = getDraftByOrderIdandUserId(id, current_user_id)
+
+    if CurGlassesOrder == None:
+        return HttpResponse(status = 404)
+
+    Lenses_in_glasses_order = getMtoMByGlassesOrder(id)
+    Lenses = []
+
+    for lns_lnk in Lenses_in_glasses_order:
+        lens = getLensById(lns_lnk.lens_id)
+        if lens != None:
+            Lenses.append({
+                'image' : lens.url,
+                'name' : lens.name,
+                'price' : lens.price,
+                'dioptres' : lns_lnk.dioptres
+            })
+
+    return render(request, 'GlassesOrder.html', {'data' : {
+        'id': id,
+        'date_created': CurGlassesOrder.date_created,
+        'date_ready' : CurGlassesOrder.date_ready,
+        'phone' : CurGlassesOrder.phone,
+        'lenses': Lenses
+    }})
+
+def AddLensController(request, id):
+    Lens = getLensById(id)
+    if Lens == None:
+        return redirect(LensesController)
+    
+    currentGlassesOrder = getOrderByUserId(current_user_id)
+    if currentGlassesOrder == None:
+        CurUser = AuthUser.objects.get(id=current_user_id)
+        currentGlassesOrder = GlassesOrder.objects.create(creator = CurUser, status = 'draft', date_created = date.today())
+    MToM.objects.get_or_create(glasses_order_id=currentGlassesOrder.glasses_order_id, lens_id=Lens.lens_id, dioptres=0.5)
+
+    return redirect(LensesController)
+
+def DeleteGlassesOrderController(request, id):
+    if id!=None:
+        cursor.execute('UPDATE glasses_order SET status = %s WHERE glasses_order_id = %s', ("deleted", id,))
+    conn.commit()
+    return redirect(LensesController)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
