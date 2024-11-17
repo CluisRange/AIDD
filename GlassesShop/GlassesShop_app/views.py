@@ -12,7 +12,7 @@ current_user_id = 1
 
 
 def getLensById(lensId):
-    return Lens.objects.get(lens_id=lensId)
+    return Lens.objects.get(lens_id=lensId, status='active')
 
 def getDraftByOrderIdandUserId(GlassesOrderId, UserId):
     return GlassesOrder.objects.filter(glasses_order_id = GlassesOrderId, creator=UserId, status='draft').first()
@@ -39,13 +39,12 @@ def LensesController(request):
     if 'search_lens' in request.GET:
         search = request.GET['search_lens']
 
-    lenses_found_by_search = Lens.objects.filter(name__icontains=search)
+    lenses_found_by_search = Lens.objects.filter(name__icontains=search, status='active').all()
 
     return render(request, 'Lenses.html', {'data' : {
         'Lenses': lenses_found_by_search,
         'GlassesOrderCount' : LensInOrderCount,
         'GlassesOrder_id' : CurrentGlassesOrderId
-        
     }})
 
 
@@ -80,6 +79,15 @@ def GlassesOrderController(request, id):
                 'dioptres' : lns_lnk.dioptres
             })
 
+    if CurGlassesOrder.date_created == None:
+        CurGlassesOrder.date_created = ''
+    
+    if CurGlassesOrder.date_ready == None:
+        CurGlassesOrder.date_ready = ''
+    
+    if CurGlassesOrder.phone == None:
+        CurGlassesOrder.phone = ''  
+
     return render(request, 'GlassesOrder.html', {'data' : {
         'id': id,
         'date_created': CurGlassesOrder.date_created,
@@ -102,29 +110,8 @@ def AddLensController(request, id):
     return redirect(LensesController)
 
 def DeleteGlassesOrderController(request, id):
+    cursor = conn.cursor()
     if id!=None:
         cursor.execute('UPDATE glasses_order SET status = %s WHERE glasses_order_id = %s', ("deleted", id,))
     conn.commit()
     return redirect(LensesController)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

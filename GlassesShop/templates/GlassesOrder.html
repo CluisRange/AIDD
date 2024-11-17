@@ -7,11 +7,11 @@
     
     <ui class = "OrderParamBox"></div>
         <div class = "OrderParamText"> Дата заказа:</div>
-        <input name = "OrderDate" type = "text" class = OrderParamsInp value="{{ data.date_created }}" autocomplete="off"></input>
+        <input name = "OrderDate" type = "text" class = OrderParamsInp value="{{ data.date_created|date:'d-m-Y' }}" autocomplete="off"></input>
     </ui>
     <ui class = "OrderParamBox"></div>
         <div class = "OrderParamText"> Дата готовности:</div>
-        <input name = "ReadyDate" type = "text" class = OrderParamsInp value="{{ data.date_ready }}" autocomplete="off"></input>
+        <input name = "ReadyDate" type = "text" class = OrderParamsInp value="{{ data.date_ready|date:'d-m-Y' }}" autocomplete="off"></input>
     </ui>
     <ui class = "OrderParamBox"></div>
         <div class = "OrderParamText"> Телефон:</div>
