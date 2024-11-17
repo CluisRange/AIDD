@@ -6,20 +6,20 @@
 <ui class = "Glasses_order_params">
     <ui class = "OrderParamBox"></div>
         <div class = "OrderParamText"> Дата заказа:</div>
-        <input name = "OrderDate" type = "text" class = OrderParamsInp value="{{ Order_Date }}" autocomplete="off"></input>
+        <input name = "OrderDate" type = "text" class = OrderParamsInp value="{{ data.glasses_order.Order_Date }}" autocomplete="off"></input>
     </ui>
     <ui class = "OrderParamBox"></div>
         <div class = "OrderParamText"> Дата готовности:</div>
-        <input name = "ReadyDate" type = "text" class = OrderParamsInp value="{{ Ready_Date }}" autocomplete="off"></input>
+        <input name = "ReadyDate" type = "text" class = OrderParamsInp value="{{ data.glasses_order.Ready_Date }}" autocomplete="off"></input>
     </ui>
     <ui class = "OrderParamBox"></div>
         <div class = "OrderParamText"> Телефон:</div>
-        <input name = "PhoneNumber" type = "text" class = OrderParamsInp value="{{ Phone_Number }}" autocomplete="off"></input>
+        <input name = "PhoneNumber" type = "text" class = OrderParamsInp value="{{ data.glasses_order.Phone_Number }}" autocomplete="off"></input>
     </ui>
 </ui>
 
 <div class = "Glasses_Order_comment_text"> Комментарий:</div>
-<input name = "Comment_inp" type = "text" class = Glasses_Order_Comment_inp value="{{ Comment_inp }}" autocomplete="off"></input>
+<input name = "Comment_inp" type = "text" class = Glasses_Order_Comment_inp value="{{ data.glasses_order.Comment }}" autocomplete="off"></input>
 
 <ul class = "Glasses_order_card_list">
     {% for lens in data.lenses %}
@@ -27,7 +27,7 @@
             <img class = "Glasses_order_card_img" src = "{{lens.image}}" >
             <div class = "Glasses_order_card_title"> {{lens.name}}</div> 
             <div class = "Dioptres_text"> Диоптрий:</div>
-            <input name = "dioptres" type = "text" class = DioptresInp value="{{ org_name }}" autocomplete="off"></input>
+            <input name = "dioptres" type = "text" class = DioptresInp value="{{ lens.dptr }}" autocomplete="off"></input>
             <div class = "Glasses_order_card_price"> {{lens.price}}</div> 
         </div>
     {% endfor %}

@@ -5,8 +5,20 @@ from datetime import date
 Glasses_Orders_list = [
     {
     'id': 1,
-    'ItemIds':[1, 2, 3],
-    'dptrs':[-1, 1.5, 2],
+    'items':[
+        {
+            'id':1,
+            'dptrs':-1
+        },
+        {
+            'id':2,
+            'dptrs':-1.5
+        },
+        {
+            'id':3,
+            'dptrs':2
+        },
+    ],
     'Order_Date': '25.10.2024', 
     'Ready_Date': '30.10.2024',
     'Phone_Number': '89631231245',
@@ -14,8 +26,7 @@ Glasses_Orders_list = [
     },
     {
     'id': 2,
-    'ItemIds':[],
-    'dptrs':[],
+    'items':[],
     'Order_Date': '28.10.2024', 
     'Ready_Date': '1.11.2024',
     'Phone_Number': '89631231212',
@@ -23,8 +34,24 @@ Glasses_Orders_list = [
     },
     {
     'id': 3,
-    'ItemIds':[3, 4, 5, 1],
-    'dptrs':[-2, 1, 4.5, 3],
+    'items':[
+        {
+            'id':3,
+            'dptrs':-2
+        },
+        {
+            'id':4,
+            'dptrs':-1
+        },
+        {
+            'id':5,
+            'dptrs':4.5
+        },
+        {
+            'id':1,
+            'dptrs':3
+        },
+    ],
     'Order_Date': '2.11.2024', 
     'Ready_Date': '11.11.2024',
     'Phone_Number': '89631234678',
@@ -75,18 +102,13 @@ def GlassesOrderController(request, id):
 
     linses_in_order_list = []
     
-
-    for GlassesOrder in Glasses_Orders_list:
-        if GlassesOrder['id'] == id:
-            CurGlassesOrder = GlassesOrder
+    CurGlassesOrder = Glasses_Orders_list[id-1]
             
-    for i in range (0, len(CurGlassesOrder['ItemIds'])):
-        for Lens in Lenses_list:
-            if Lens['id'] == CurGlassesOrder['ItemIds'][i]:
-                linses_in_order_list.append({**Lens, 'dptr':CurGlassesOrder['dptrs'][i]})
+    for i in CurGlassesOrder['items']:
+        linses_in_order_list.append({**Lenses_list[i['id']], 'dptr':i['dptrs']})
 
     return render(request, 'GlassesOrder.html', {'data' : {
-        'glasses_order': GlassesOrder,
+        'glasses_order': CurGlassesOrder,
         'lenses': linses_in_order_list
     }})
 
@@ -97,7 +119,7 @@ def LensesController(request):
     GlassesOrderCount = 0
     for Order in Glasses_Orders_list:
         if Order['id'] == GlassesOrder_id:
-            GlassesOrderCount =  len(Order['ItemIds'])
+            GlassesOrderCount =  len(Order['items'])
 
     search = ''
     if 'search_lens' in request.GET:
@@ -105,9 +127,9 @@ def LensesController(request):
 
     lenses_list_main = []
 
-    for order in Lenses_list:
-        if search.lower() in order['name'].lower():
-            lenses_list_main.append(order)
+    for lens in Lenses_list:
+        if search.lower() in lens['name'].lower():
+            lenses_list_main.append(lens)
 
     return render(request, 'Lenses.html', {'data' : {
         'Lenses': lenses_list_main,
