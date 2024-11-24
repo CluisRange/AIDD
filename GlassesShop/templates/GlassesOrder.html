@@ -7,15 +7,19 @@
     
     <ui class = "OrderParamBox"></div>
         <div class = "OrderParamText"> Дата заказа:</div>
-        <input name = "OrderDate" type = "text" class = OrderParamsInp value="{{ data.date_created|date:'d-m-Y' }}" autocomplete="off"></input>
+        <input name = "OrderDate" type = "text" class = OrderParamsInp value="{{ data.date_created|date:'d-m-Y H:i:s' }}" autocomplete="off"></input>
     </ui>
     <ui class = "OrderParamBox"></div>
-        <div class = "OrderParamText"> Дата готовности:</div>
-        <input name = "ReadyDate" type = "text" class = OrderParamsInp value="{{ data.date_ready|date:'d-m-Y' }}" autocomplete="off"></input>
+        <div class = "OrderParamText"> Сумма заказа:</div>
+        <input name = "OrderSum" type = "text" class = OrderParamsInp value="{{ data.order_sum }}" autocomplete="off"></input>
     </ui>
     <ui class = "OrderParamBox"></div>
         <div class = "OrderParamText"> Телефон:</div>
+        {%if data.phone != None%}
         <input name = "PhoneNumber" type = "text" class = OrderParamsInp value="{{ data.phone }}" autocomplete="off"></input>
+        {%else%}
+        <input name = "PhoneNumber" type = "text" class = OrderParamsInp  autocomplete="off"></input>
+        {%endif%}
     </ui>
     <form action = "{%url 'delete_glasses_order_url' data.id%}" method = post>
         {% csrf_token %}
@@ -23,17 +27,14 @@
     </form>
 </ui>
 
-<div class = "Glasses_Order_comment_text"> Комментарий:</div>
-<input name = "Comment_inp" type = "text" class = Glasses_Order_Comment_inp value="{{ Comment_inp }}" autocomplete="off"></input>
-
 <ul class = "Glasses_order_card_list">
     {% for lens in data.lenses %}
         <div class = "Glasses_order_product_rectangle">
-            <img class = "Glasses_order_card_img" src = "{{lens.image}}" >
-            <div class = "Glasses_order_card_title"> {{lens.name}}</div> 
+            <img class = "Glasses_order_card_img" src = "{{lens.lens.url}}" >
+            <div class = "Glasses_order_card_title"> {{lens.lens.name}}</div> 
             <div class = "Dioptres_text"> Диоптрий:</div>
             <input name = "dioptres" type = "text" class = DioptresInp value="{{ lens.dioptres }}" autocomplete="off"></input>
-            <div class = "Glasses_order_card_price"> {{lens.price}} рублей</div> 
+            <div class = "Glasses_order_card_price"> {{lens.lens.price}} рублей</div> 
         </div>
     {% endfor %}
 </ul>

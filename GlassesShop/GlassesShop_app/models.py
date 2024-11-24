@@ -23,9 +23,9 @@ class GlassesOrder(models.Model):
     creator = models.ForeignKey(AuthUser, models.DO_NOTHING, db_column='creator')
     date_formed = models.DateTimeField(blank=True, null=True)
     moderator = models.ForeignKey(AuthUser, models.DO_NOTHING, db_column='moderator', related_name='glassesorder_moderator_set', blank=True, null=True)
-    date_ready = models.DateTimeField(blank=True, null=True)
     phone = models.TextField(blank=True, null=True)
     date_ended = models.DateTimeField(blank=True, null=True)
+    order_sum = models.IntegerField(blank=True, null=True)
 
     class Meta:
         managed = False
@@ -46,9 +46,9 @@ class Lens(models.Model):
 
 
 class MToM(models.Model):
-    lens_id = models.IntegerField()
-    glasses_order_id = models.IntegerField()
-    dioptres = models.FloatField(blank=True, null=True)
+    lens = models.ForeignKey(Lens, on_delete=models.DO_NOTHING)
+    glasses_order = models.ForeignKey(GlassesOrder, on_delete=models.DO_NOTHING)
+    dioptres = models.TextField(blank=True, null=True)
 
     class Meta:
         managed = False

@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from datetime import date
+from datetime import datetime
 from django.http import HttpResponse
 import psycopg2
 from .models import  GlassesOrder, MToM, Lens, AuthUser
@@ -62,38 +62,24 @@ def LensDescriptionController(request, id):
 
 def GlassesOrderController(request, id):
     CurGlassesOrder = getDraftByOrderIdandUserId(id, current_user_id)
-
     if CurGlassesOrder == None:
         return HttpResponse(status = 404)
 
-    Lenses_in_glasses_order = getMtoMByGlassesOrder(id)
     Lenses = []
+    Order_sum=0
 
-    for lns_lnk in Lenses_in_glasses_order:
-        lens = getLensById(lns_lnk.lens_id)
-        if lens != None:
-            Lenses.append({
-                'image' : lens.url,
-                'name' : lens.name,
-                'price' : lens.price,
-                'dioptres' : lns_lnk.dioptres
-            })
+    Lenses = MToM.objects.filter(glasses_order_id=CurGlassesOrder.glasses_order_id).select_related('lens')
 
-    if CurGlassesOrder.date_created == None:
-        CurGlassesOrder.date_created = ''
-    
-    if CurGlassesOrder.date_ready == None:
-        CurGlassesOrder.date_ready = ''
-    
-    if CurGlassesOrder.phone == None:
-        CurGlassesOrder.phone = ''  
+    for lns in Lenses:
+        Order_sum += lns.lens.price
 
     return render(request, 'GlassesOrder.html', {'data' : {
         'id': id,
         'date_created': CurGlassesOrder.date_created,
-        'date_ready' : CurGlassesOrder.date_ready,
+        'order_sum' : Order_sum,
         'phone' : CurGlassesOrder.phone,
-        'lenses': Lenses
+        'lenses': Lenses,
+        'lenses_count':len(Lenses)
     }})
 
 def AddLensController(request, id):
@@ -104,8 +90,8 @@ def AddLensController(request, id):
     currentGlassesOrder = getOrderByUserId(current_user_id)
     if currentGlassesOrder == None:
         CurUser = AuthUser.objects.get(id=current_user_id)
-        currentGlassesOrder = GlassesOrder.objects.create(creator = CurUser, status = 'draft', date_created = date.today())
-    MToM.objects.get_or_create(glasses_order_id=currentGlassesOrder.glasses_order_id, lens_id=Lens.lens_id, dioptres=0.5)
+        currentGlassesOrder = GlassesOrder.objects.create(creator = CurUser, status = 'draft', date_created = datetime.today())
+    MToM.objects.get_or_create(glasses_order_id=currentGlassesOrder.glasses_order_id, lens_id=Lens.lens_id, dioptres='0,5')
 
     return redirect(LensesController)
 
