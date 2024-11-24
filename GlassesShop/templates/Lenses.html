@@ -2,7 +2,9 @@
 {% load static %}
 
 {% block content %}
+{% if data.GlassesOrder_id != -1%}
 <a href = "{%url 'glasses_order_url' data.GlassesOrder_id%}" >
+{%endif%}
     <div class = Glasses_Order_div>
     {%if data.GlassesOrderCount > 0 %}
     <img class = "imagebusket" src= 'http://localhost:9000/glassesimgs/full_basket.jpeg'>
@@ -18,11 +20,15 @@
 
 <ul class = "lens_list">
     {% for lens in data.Lenses %}
-            <a class = "lens_link" href="{% url 'lens_url' lens.id %}">
+            <a class = "lens_link" href="{% url 'lens_url' lens.lens_id %}">
                 <div class = divlens>
-                    <img class = "lens_card_img" src = "{{lens.image}}" >
+                    <img class = "lens_card_img" src = "{{lens.url}}" >
                     <div class = "lens_card_title"> {{lens.name}}</div> 
-                    <div class = "lens_card_price"> {{lens.price}}</div> 
+                    <div class = "lens_card_price"> {{lens.price}} рублей</div> 
+                    <form action = "{%url 'add_lens_url' lens.lens_id%}" method = post>
+                        {% csrf_token %}
+                        <button name = "addLensToGlassesOrder" type = "submit" class = "AddLensBtn">Добавить</button>
+                    </form>
                 </div>
             </a> 
     {% empty %}
