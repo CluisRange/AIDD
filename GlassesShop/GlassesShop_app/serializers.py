@@ -8,7 +8,7 @@ class UserSerializer(serializers.ModelSerializer):
     is_superuser = serializers.BooleanField(default=False, required=False)
     class Meta:
         model = get_user_model()
-        fields = ['email', 'is_staff', 'is_superuser', 'username']
+        fields = ['email', 'is_staff', 'is_superuser', 'username', 'first_name', 'last_name', 'password']
 
         def get_fields(self):
             new_fields = OrderedDict()
@@ -85,3 +85,27 @@ class SingleGlassesOrderSerializer(serializers.ModelSerializer):
             field.required = False
             new_fields[name] = field
         return new_fields
+
+class LensesListQuerySerializer(serializers.Serializer):
+    search_lens = serializers.CharField(required=False)
+    search_price_max = serializers.IntegerField(required=False)
+    search_price_min = serializers.IntegerField(required=False)
+
+class LensesListResponseSerializer(serializers.Serializer):
+    lenses = LensSerializer(many=True)
+    draft_GlassesOrder_id = serializers.IntegerField()
+    draft_GlassesOrder_lens_count = serializers.IntegerField()
+
+class ChangeDioptresQuerySerializer(serializers.Serializer):
+    dioptres = serializers.CharField(required=False)
+
+class GlassesOrdersListQuerySerializer(serializers.Serializer):
+    status = serializers.CharField(required=False)
+    min_date_formed = serializers.DateTimeField(required=False)
+    max_date_formed = serializers.DateTimeField(required=False)
+
+class UserChangeDataSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=False)
+    first_name = serializers.CharField(required=False)
+    last_name = serializers.CharField(required=False)
+    password = serializers.CharField(required=False)

@@ -27,7 +27,7 @@ urlpatterns = [
     path('lenses/', views.LensesMethods.as_view(), name = 'lenses_url'),
     path('lens/<int:id>/', views.SingleLensMethods.as_view(), name = 'single_lens_url'),
     path('lens/<int:id>/addPicture/', views.LensAddPicture.as_view(), name = 'add_lens_picture_url'),
-    path('lens/<int:id>/add/', views.AddLens.as_view(), name = 'delete_lens_url'),
+    path('lens/<int:id>/add/', views.AddLens.as_view(), name = 'add_lens_url'),
 
     path('glasses_orders/', views.GlassesOrdersMethods.as_view(), name = 'glasses_orders_url'),
     path('glasses_order/<int:id>/', views.GlassesOrderMethods.as_view(), name = 'glasses_order_url'),

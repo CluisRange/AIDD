@@ -9,9 +9,9 @@ def getUserBySessionId(request):
     ssid = request.COOKIES.get('session_id')
     if ssid:
         try:
-            email = session_storage.get(ssid).decode('utf-8')
-            user = get_user_model().objects.get(email=email)
-        except AttributeError:
+            uname = session_storage.get(ssid).decode('utf-8')
+            user = get_user_model().objects.get(username=uname)
+        except (AttributeError, get_user_model().DoesNotExist):
             user = AnonymousUser()
     else:
         user = AnonymousUser() 
