@@ -396,10 +396,10 @@ class Registration(APIView):
 
     @swagger_auto_schema(request_body=serializer_class)
     def post(self, request):
-        if not request.data.get('password') or not request.data.get('email'):
+        if not request.data.get('password') or not request.data.get('username'):
             return Response({"error": "Не указаны данные для регистрации"}, status=status.HTTP_400_BAD_REQUEST)
 
-        if self.model_class.objects.filter(email=request.data.get('email'), username = request.data.get('username')).exists():
+        if self.model_class.objects.filter(email=request.data.get('email')).exists() or self.model_class.objects.filter(username=request.data.get('username')).exists():
             return Response({"error": "Пользователь с такими данными уже существует"}, status=status.HTTP_400_BAD_REQUEST)
         
         serializer = self.serializer_class(data=request.data)
