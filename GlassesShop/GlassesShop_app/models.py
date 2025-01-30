@@ -24,7 +24,7 @@ class GlassesOrder(models.Model):
     date_ended = models.DateTimeField(blank=True, null=True)
     phone = models.TextField(blank=True, null=True)
     order_sum = models.IntegerField(blank=True, null=True)
-
+    qr = models.TextField(null=True, blank=True)
 
     class Meta:
         managed = False
@@ -33,11 +33,11 @@ class GlassesOrder(models.Model):
 
 class Lens(models.Model):
     lens_id = models.AutoField(primary_key=True)
-    name = models.TextField(unique=True, blank=True, null=True)
-    description = models.TextField(unique=True, blank=True, null=True)
-    status = models.TextField(blank=True, null=True, default='active')
+    name = models.TextField(unique=True)
+    description = models.TextField(unique=True)
+    status = models.TextField( default='active')
     url = models.TextField(blank=True, null=True)
-    price = models.IntegerField(blank=True, null=True)
+    price = models.IntegerField()
 
     class Meta:
         managed = False

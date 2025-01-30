@@ -14,6 +14,8 @@ import uuid
 from .GetUserBySessionId import getUserBySessionId, session_storage
 from django.contrib.auth.models import AnonymousUser
 from .permissions import *
+from .services.qr_generate import generate_glasses_order_qr
+from django.utils import timezone
 
 
 conn = psycopg2.connect(dbname="glasses_shop", host="localhost", user="postgres", password="1111", port="5432")
@@ -54,21 +56,26 @@ class LensesMethods(APIView):
     @swagger_auto_schema(query_serializer=LensesListQuerySerializer, responses={200: LensesListResponseSerializer})
     def get(self, request): #список с фильтрацией
         search_lens = ''
-
+        CurrentUser = getUserBySessionId(request)
         if 'search_lens' in request.GET:
             search_lens = request.GET['search_lens']
+
         lenses = self.model_class.objects.filter(status='active', name__icontains=search_lens).all()
+
+        if(CurrentUser):        
+            if(CurrentUser.is_staff or CurrentUser.is_superuser):
+                lenses = self.model_class.objects.filter(name__icontains=search_lens).all()
 
         # обработка поиска по цене
         search_price_max = ''
         search_price_min = ''
         if 'search_price_max' in request.GET:
             search_price_max = request.GET['search_price_max']
-            lenses = lenses.filter(status='active', price__lte=search_price_max).all()
+            lenses = lenses.filter(price__lte=search_price_max).all()
 
         if 'search_price_min' in request.GET:
             search_price_min = request.GET['search_price_min']
-            lenses = lenses.filter(status='active', price__gte=search_price_min).all()
+            lenses = lenses.filter(price__gte=search_price_min).all()
 
         serializer = self.serializer_class(lenses, many=True)
         CurrentUser = getUserBySessionId(request)
@@ -91,7 +98,7 @@ class LensesMethods(APIView):
         })
 
     @swagger_auto_schema(request_body=serializer_class)    
-    @method_permission_classes((IsAdmin,))
+    @method_permission_classes((IsManager,))
     def post(self, request):    #добавление без изображения
         serializer = self.serializer_class(data = request.data)
 
@@ -114,15 +121,15 @@ class SingleLensMethods(APIView):
         return Response(serializer.data)
 
     @swagger_auto_schema(request_body=serializer_class)
-    @method_permission_classes((IsAdmin,))
+    @method_permission_classes((IsManager,))
     def put(self, request, id): #изменение записи
         try:
             lens = self.model_class.objects.get(lens_id=id)
         except self.model_class.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        if lens.status != 'active':
-            return Response({'Error':'Только активные линзы могут быть изменены'}, status=status.HTTP_400_BAD_REQUEST)
+        # if lens.status != 'active':
+        #     return Response({'Error':'Только активные линзы могут быть изменены'}, status=status.HTTP_400_BAD_REQUEST)
 
         serializer = self.serializer_class(lens, data=request.data, partial = True)
         if serializer.is_valid():
@@ -130,7 +137,7 @@ class SingleLensMethods(APIView):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-    @method_permission_classes((IsAdmin,))
+    @method_permission_classes((IsManager,))
     def delete(self, request, id): #удаление записи
         try:
             lens = self.model_class.objects.get(lens_id=id, status='active')
@@ -163,21 +170,19 @@ class LensAddPicture(APIView):
     model_class = Lens
     serializer_class = LensSerializer
 
-    @swagger_auto_schema(request_body=serializer_class)
-    @method_permission_classes((IsAdmin,))
+    @swagger_auto_schema(request_body=addPicSerializer)
+    @method_permission_classes((IsManager,))
     def post(self, request, id): #добавление изображения
         try:
             lens = self.model_class.objects.get(lens_id=id)
         except self.model_class.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        if lens.status != 'active':
-            return Response({'Error':'Только активные линзы могут быть изменены'}, status=status.HTTP_400_BAD_REQUEST)
-
+        print(request.FILES.get('image'))
         img_result = add_pic(lens, request.FILES.get('image'))
         if 'error' in img_result.data:
             return img_result
-        return Response(status=status.HTTP_200_OK)
+        return Response({'Успех':'Изображение загружено'}, status=status.HTTP_200_OK)
 
 class GlassesOrdersMethods(APIView):     
     model_class = GlassesOrder
@@ -296,7 +301,7 @@ class SaveGlassesOrder(APIView):
             return Response({'Error':'Только черновые заказы могут быть сформированы'}, status=status.HTTP_400_BAD_REQUEST)
         
         if not glasses_order.phone:
-            return Response({'Error': 'Заполните все поля заказа'})
+            return Response({'Error': 'Заполните все поля заказа'}, status=status.HTTP_400_BAD_REQUEST)
         
         glasses_order.date_formed = datetime.now()
         glasses_order.status = 'formed'
@@ -308,7 +313,7 @@ class ModerateGlassesOrder(APIView):
     model_class = GlassesOrder
     serializer_class = GlassesOrderSerializer
 
-    @swagger_auto_schema(request_body=serializer_class)
+    @swagger_auto_schema(query_serializer=moderateQuery)
     @method_permission_classes((IsManager,))
     def put(self, request, id): #модерация
         try:
@@ -320,8 +325,8 @@ class ModerateGlassesOrder(APIView):
             return Response({'Error':'Только сформированные заказы могут быть смодерированы'}, status=status.HTTP_400_BAD_REQUEST)
         
         glasses_order.moderator = get_user_model().objects.get(id = getUserBySessionId(request).id)
-        glasses_order.date_ended = datetime.now()
-        isAccepted = request.query_params.get('isAccepted')
+        glasses_order.date_ended = timezone.now()
+        isAccepted = request.GET['isAccepted']
 
         lenses_in_order = MToM.objects.filter(glasses_order_id=id).all()
         OrderSum = 0
@@ -335,6 +340,8 @@ class ModerateGlassesOrder(APIView):
         else:
             glasses_order.status = 'cancelled'
         
+        qr_code_base64 = generate_glasses_order_qr(glasses_order)
+        glasses_order.qr = qr_code_base64
 
         glasses_order.save()
         serializer = self.serializer_class(glasses_order)

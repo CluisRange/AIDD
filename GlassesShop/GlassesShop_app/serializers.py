@@ -22,7 +22,7 @@ class GlassesOrderSerializer(serializers.ModelSerializer):
     moderator = serializers.SlugRelatedField(slug_field='username', read_only=True)
     class Meta:
         model = GlassesOrder
-        fields = ['glasses_order_id', 'status', 'date_created', 'creator', 'date_formed', 'moderator', 'order_sum', 'phone', 'date_ended']
+        fields = ['qr', 'glasses_order_id', 'status', 'date_created', 'creator', 'date_formed', 'moderator', 'order_sum', 'phone', 'date_ended']
 
     def get_fields(self):
         new_fields = OrderedDict()
@@ -109,3 +109,15 @@ class UserChangeDataSerializer(serializers.Serializer):
     first_name = serializers.CharField(required=False)
     last_name = serializers.CharField(required=False)
     password = serializers.CharField(required=False)
+
+class UpdateLensSerializer(serializers.Serializer):
+    name = serializers.CharField(required=False)
+    description = serializers.CharField(required=False)
+    status = serializers.CharField(required=False)
+    price = serializers.IntegerField(required=False)
+
+class addPicSerializer(serializers.Serializer):
+    image = serializers.ImageField(required=False)
+
+class moderateQuery(serializers.Serializer):
+    isAccepted = serializers.IntegerField(required=False)
