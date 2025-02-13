@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 from GlassesShop_app.serializers import *
 from rest_framework import status
 from GlassesShop_app.minio import delete_pic, add_pic
-from datetime import datetime
+from datetime import datetime, timedelta
 from drf_yasg.utils import swagger_auto_schema
 
 from django.contrib.auth import get_user_model
@@ -199,27 +199,28 @@ class GlassesOrdersMethods(APIView):
         if 'status' in request.GET:
             filter_status = request.GET['status']
         if 'min_date_formed' in request.GET:
-            min_date_formed = request.GET['min_date_formed']
+            if request.GET['min_date_formed'] != '':
+                min_date_formed = request.GET['min_date_formed']
         if 'max_date_formed' in request.GET:
-            max_date_formed = request.GET['max_date_formed']
+            if request.GET['max_date_formed'] != '':
+                max_date_formed = (datetime.strptime(request.GET['max_date_formed'], '%Y-%m-%d') + timedelta(days=1)).strftime('%Y-%m-%d')
+
 
         
         glasses_order = self.model_class.objects.filter(status__in=['formed', 'accepted', 'cancelled']).all()
 
         if filter_status != '':
             glasses_order = glasses_order.filter(status=filter_status)
-        if min_date_formed != '':
+        if min_date_formed:
             glasses_order = glasses_order.filter(date_formed__gte=min_date_formed)
-        if max_date_formed != '':
+        if max_date_formed:
             glasses_order = glasses_order.filter(date_formed__lte=max_date_formed)
 
-        # if min_date_formed != '' and max_date_formed!='':
-        #     glasses_order = glasses_order.filter(date_formed__range=[min_date_formed, max_date_formed])
         if not (CurrentUser.is_staff or CurrentUser.is_superuser):
             glasses_order = glasses_order.filter(creator = CurrentUser)
 
         if not glasses_order:
-            return Response(status=status.HTTP_204_NO_CONTENT)
+            return Response({'Error':'Не найдено'}, status=status.HTTP_400_BAD_REQUEST)
         
         serializer = self.serializer_class(glasses_order, many=True)
         return Response(serializer.data)
